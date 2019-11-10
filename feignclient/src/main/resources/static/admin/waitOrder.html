@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript" src="../js/vue.min.js"></script>
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<body>
+<div id="userMain" style="padding-top: 10px;padding-left: 10px;">
+    <el-form :inline="true">
+        <el-form-item>
+            <el-input v-model="name" placeholder="请输入菜名" clearable></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="loaddata">查询</el-button>
+        </el-form-item>
+    </el-form>
+    <el-table
+            :data="datalist.userlist"
+            border
+            style="width: 100%"
+            height="450px">
+        <el-table-column
+                fixed
+                prop="id"
+                label="id">
+        </el-table-column>
+        <el-table-column
+                prop="menu.name"
+                label="菜名">
+        </el-table-column>
+        <el-table-column
+                prop="menu.price"
+                label="价格">
+        </el-table-column>
+        <el-table-column
+                prop="menu.flavor"
+                label="口味">
+        </el-table-column>
+        <el-table-column
+                prop="menu.type.name"
+                label="类型">
+        </el-table-column>
+        <el-table-column
+                prop="statestr"
+                label="订单状态">
+        </el-table-column>
+        <el-table-column
+                fixed="right"
+                label="操作">
+            <template slot-scope="scope">
+                <el-button v-if="scope.row.state == '0'" @click="btn_receive(scope.row)" type="text" size="small">接收订单</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <div class="block">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="datalist.currentpage"
+                :page-sizes="[10, 30, 50, 100]"
+                :page-size="datalist.pagesize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="datalist.total">
+        </el-pagination>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+    let vuemain = new Vue({
+        el: "#userMain",
+        data(){
+            return{
+                name:"",
+                typeList:[],
+                datalist: {
+                    userlist: [],
+                    total: 0,
+                    currentpage: 1,
+                    pagesize: 10
+                },
+            }
+        },
+        created(){
+            this.loaddata();
+        },
+        methods:{
+            loaddata(){
+                $.post(`/order/selectQlByPage/${this.datalist.currentpage}/${this.datalist.pagesize}/1`,{name:this.name},function (result) {
+                    vuemain.datalist.userlist = result.data;
+                    vuemain.datalist.total = result.total;
+                })
+            },
+            // 页面长度改变时候触发事件
+            handleSizeChange(pagesize){
+               vuemain.datalist.pagesize = pagesize;
+               this.loaddata();
+            },
+            // 当前页改变时候触发事件
+            handleCurrentChange(currentpage){
+                vuemain.datalist.currentpage = currentpage;
+                this.loaddata();
+            },
+        //    订购此菜品
+            btn_receive(data){
+                this.$confirm('是否接收'+data.menu.name+'的订单吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    $.post(`/order/receiveOrder/${data.id}`,function (result) {
+                        if(result.code==2000){
+                            vuemain.$message({
+                                message: '接收成功',
+                                type: 'success'
+                            });
+                            vuemain.loaddata();
+                        } else {
+                            vuemain.$message.error('接收失败');
+                        }
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消此操作'
+                    });
+                });
+            }
+        }
+    })
+</script>
+</html>

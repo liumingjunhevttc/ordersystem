@@ -1,0 +1,16 @@
+server:
+  port: 8012
+  error:
+    path:
+spring:
+  application:
+    name: feignclient
+  thymeleaf:
+    prefix: classpath:/static/
+    suffix: .html
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8010/eureka/

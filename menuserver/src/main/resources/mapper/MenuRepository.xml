@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baidu.repository.MenuRepository">
+    <resultMap id="menuMap" type="com.baidu.entity.Menu">
+        <id property="id" column="tid"></id>
+        <result property="name" column="tname"></result>
+        <result property="price" column="tprice"></result>
+        <result property="flavor" column="tflavor"></result>
+        <association property="type" javaType="com.baidu.entity.Type">
+            <id property="id" column="mid"></id>
+            <result property="name" column="mname"></result>
+        </association>
+    </resultMap>
+    <select id="selectByPage" parameterType="java.util.Map" resultMap="menuMap">
+        select t.id tid,t.name tname,t.price tprice,t.flavor tflavor,t.tid mid ,tt.name mname from t_menu t
+        left join t_type tt on t.tid = tt.id
+         <where>
+             <if test="name!=null and name!=''">
+                 t.name like  "%"#{name}"%"
+             </if>
+         </where>
+         limit #{startcount},#{datasize}
+    </select>
+    <select id="selectByCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(1) from t_menu
+        <where>
+            <if test="name!=null and name!=''">
+                name like "%"#{name}"%"
+            </if>
+        </where>
+    </select>
+    <insert id="save" parameterType="com.baidu.entity.Menu">
+        insert into t_menu(name,price,flavor,tid)
+        values (#{name},#{price},#{flavor},#{tid})
+    </insert>
+    <select id="judgeUsername" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from t_menu where name = #{name}
+    </select>
+    <select id="findById" parameterType="java.lang.Integer" resultType="com.baidu.entity.Menu">
+        select * from t_menu t where t.id = #{id}
+    </select>
+    <update id="update" parameterType="com.baidu.entity.Menu">
+        update t_menu
+        <set>
+            name = #{name},
+            price=#{price},
+            flavor=#{flavor},
+            tid=#{tid}
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        delete from t_menu where id = #{id}
+    </delete>
+</mapper>

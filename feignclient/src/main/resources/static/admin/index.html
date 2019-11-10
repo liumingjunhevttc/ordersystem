@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>外卖点餐系统</title>
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript" src="../js/vue.min.js"></script>
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<style type="text/css">
+    body{
+        margin: 0;
+        padding: 0;
+    }
+</style>
+<body>
+<div id="adminmain">
+    <el-container>
+        <el-header style="padding: 0;">
+            <el-menu mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" class="clear" @select="btnTopMenu">
+                <div class="title">外卖点餐系统</div>
+                <el-submenu index="1" class="right">
+                    <template slot="title">管理员</template>
+<!--                    <el-menu-item index="1-1">查看账号信息</el-menu-item>-->
+                    <el-menu-item index="1-2">修改密码</el-menu-item>
+                    <el-menu-item index="1-3">退出系统</el-menu-item>
+                </el-submenu>
+            </el-menu>
+        </el-header>
+        <el-container>
+            <el-aside width="200px">
+                    <el-menu
+                            default-active="1"
+                            class="el-menu-vertical-demo"
+                            background-color="#545c64"
+                            text-color="#fff"
+                            active-text-color="#ffd04b"
+                            @select="clickSubMenu">
+                        <el-submenu index="3">
+                            <template slot="title">
+                                <i class="el-icon-user"></i>
+                                <span>订单管理</span>
+                            </template>
+                            <el-menu-item index="3-1">未制作订单</el-menu-item>
+                            <el-menu-item index="3-2">正派送订单</el-menu-item>
+                        </el-submenu>
+                        <el-submenu index="1">
+                            <template slot="title">
+                                <i class="el-icon-user"></i>
+                                <span>用户管理</span>
+                            </template>
+                            <el-menu-item index="1-1">用户信息</el-menu-item>
+                        </el-submenu>
+                        <el-submenu index="2">
+                            <template slot="title">
+                                <i class="el-icon-user"></i>
+                                <span>菜单管理</span>
+                            </template>
+                            <el-menu-item index="2-1">菜单类型维护</el-menu-item>
+                            <el-menu-item index="2-2">菜单信息维护</el-menu-item>
+                        </el-submenu>
+                    </el-menu>
+            </el-aside>
+            <iframe id="main" width="100%"></iframe>
+        </el-container>
+    </el-container>
+    <el-dialog title="修改密码"  :visible="dialogVisible" width="60%" :before-close="handleClose">
+        <el-form :model="form" label-position="center" :rules="formRules" ref="formRef" label-width="100px">
+            <el-form-item label="原密码" prop="afpassword">
+                <el-input v-model="form.afpassword" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="现密码" prop="nowpassword">
+                <el-input v-model="form.nowpassword" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="再输入一次" prop="oncepassword">
+                <el-input v-model="form.oncepassword" show-password></el-input>
+            </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="handleClose">取 消</el-button>
+            <el-button type="primary" @click="submitPassword">确 定</el-button>
+        </span>
+    </el-dialog>
+</div>
+</body>
+<script type="text/javascript">
+    let vue = new Vue({
+        el: "#adminmain",
+        data(){
+            let validatePass = (rule, value, callback) => {
+                if(value === ""){
+                    callback(new Error("请输入原密码"));
+                } else {
+                    $.post("/login/getUser",function (result) {
+                        if(result.password === value){
+                            callback();
+                        } else {
+                            callback(new Error("密码错误,请重新输入"));
+                        }
+                    })
+                }
+            };
+            let validateJudgePassword = (rule,value,callback) => {
+                if(value==""){
+                    callback(new Error("请再次输入新密码"))
+                } else {
+                    callback()
+                }
+            };
+            let validateJudgebeforeAndPassword = (rule,value,callback) =>{
+                if(value === ""){
+                    callback(new Error("请输入新密码"))
+                } else {
+                    if(this.form.afpassword === value){
+                        callback(new Error("不能使用原密码"))
+                    } else {
+                        callback();
+                    }
+                }
+            }
+            return{
+                dialogVisible: false,
+                form:{
+                    afpassword:"",//原来密码
+                    nowpassword:"",//现在密码
+                    oncepassword:"",//请再次输入
+                },
+                formRules:{
+                    afpassword:[
+                        { validator: validatePass, trigger: 'blur' }
+                    ],
+                    nowpassword:[
+                        { validator: validateJudgebeforeAndPassword, trigger: 'blur' }
+                    ],
+                    oncepassword:[
+                        { validator: validateJudgePassword, trigger: 'blur' }
+                    ]
+                }}
+        },
+        mounted(){
+            $(".el-aside .el-menu").height((document.documentElement.clientHeight-20-40)+"px")
+            $(".title").removeAttr("tabindex");
+        },
+        methods:{
+            btnTopMenu:function (index,path) {
+                let pathname = path[1];
+                if (pathname === "1-2") {
+                    this.dialogVisible = true;
+                } else if (pathname === "1-3"){
+                    let r=confirm("是否退出系统")
+                    if(r) {
+                        // 退出系统，清除所有session
+                        $.post("/login/resetSystem",function(result){
+                            if(result.code == 2000){
+                                window.location.href="/login";
+                            }
+                        })
+                    }
+                }
+            },
+            handleClose:function () {
+                this.dialogVisible = false
+            },
+            submitPassword:function () {
+                this.$refs["formRef"].validate((valid) => {
+                    if(valid) {
+                        if(this.form.nowpassword !== this.form.oncepassword) {
+                            alert("两个密码不一致，请重新输入");
+                        } else {
+                        //    更新密码
+                            $.post("/login/resetPasword",{"password":this.form.nowpassword},function (result) {
+                                if(result.code == 2000){
+                                    alert("密码修改成功");
+                                }
+                            })
+                            this.form.afpassword=""//原来密码
+                            this.form.nowpassword="";//现在密码
+                            this.form.oncepassword="";//请再次输入
+                            this.dialogVisible = false
+                        }
+                    }
+                })
+            },
+        //    点击子菜单发生事件
+            clickSubMenu(index,path){
+               // 如果点击的是用户管理
+               if(index=="1-1"){
+                  $("#main").attr("src","user.html");
+               } else if (index == "2-1"){
+                   // 如果点击的是类型管理
+                   $("#main").attr("src","menuType.html");
+               } else if (index == "2-2"){
+                   // 如果点击的是菜单管理
+                   $("#main").attr("src","menu.html");
+               } else if (index == "3-1") {
+                   // 如果点击的是未完成订单
+                   $("#main").attr("src","waitOrder.html");
+               } else if (index == "3-2") {
+                   // 如果点击的是派送菜单
+                   $("#main").attr("src","sendOrder.html");
+               }
+            }
+        }
+    })
+</script>
+</html>

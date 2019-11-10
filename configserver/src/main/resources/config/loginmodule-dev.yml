@@ -1,0 +1,19 @@
+server:
+  port: 8011
+spring:
+  application:
+    name: loginmodule
+  datasource:
+    url: jdbc:mysql://localhost:3306/orderdemo?userUnicode=true&chanacterEncoding=UTF-8
+    password: root
+    username: root
+    driver-class-name: com.mysql.jdbc.Driver
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8010/eureka/
+  instance:
+    prefer-ip-address: true
+mybatis:
+  mapper-locations: classpath:mapping/**
+#  type-aliases-package: com.baidu.entity

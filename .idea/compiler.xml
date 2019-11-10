@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="loginserver" />
+        <module name="menuserver" />
+        <module name="userServer" />
+        <module name="orderServer" />
+        <module name="feignclient" />
+        <module name="zuulserver" />
+        <module name="configserver" />
+        <module name="eurekaserver" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="entity-api" target="1.5" />
+      <module name="entityapi" target="1.8" />
+      <module name="zuulServer" target="1.5" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="configserver" options="-parameters" />
+      <module name="entity-api" options="" />
+      <module name="entityapi" options="-parameters" />
+      <module name="eurekaserver" options="-parameters" />
+      <module name="feignclient" options="-parameters" />
+      <module name="loginserver" options="-parameters" />
+      <module name="menuserver" options="-parameters" />
+      <module name="orderServer" options="-parameters" />
+      <module name="userServer" options="-parameters" />
+      <module name="zuulserver" options="-parameters" />
+    </option>
+  </component>
+</project>

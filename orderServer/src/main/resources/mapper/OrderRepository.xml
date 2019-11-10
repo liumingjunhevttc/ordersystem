@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baidu.repository.OrderRepository">
+    <insert id="orderDishes" parameterType="com.baidu.entity.Order">
+        insert into t_order (uid,mid,date,state) values (#{uid},#{mid},#{date},0)
+    </insert>
+    <resultMap id="orderMap" type="com.baidu.entity.Order">
+        <id property="id" column="oid"></id>
+        <result property="date" column="odate"></result>
+        <result property="state" column="ostate"></result>
+        <result property="statestr" column="ostatestr"></result>
+        <association property="user" javaType="com.baidu.entity.User">
+            <id property="id" column="tid"></id>
+            <result property="username" column="tusername"></result>
+            <result property="nickname" column="nickname"></result>
+            <result property="gender" column="gender"></result>
+            <result property="telephone" column="ttelephone"></result>
+            <result property="registerdate" column="tregisterdate"></result>
+            <result property="address" column="taddress"></result>
+        </association>
+        <association property="menu" javaType="com.baidu.entity.Menu">
+            <id property="id" column="mid"></id>
+            <result property="name" column="mname"></result>
+            <result property="price" column="mprice"></result>
+            <result property="flavor" column="mflavor"></result>
+            <association property="type" javaType="com.baidu.entity.Type">
+                <id property="id" column="yid"></id>
+                <result property="name" column="yname"></result>
+            </association>
+        </association>
+        <association property="admin" javaType="com.baidu.entity.Admin">
+            <id property="id" column="aid"></id>
+            <result property="username" column="ausername"></result>
+        </association>
+    </resultMap>
+    <select id="selectByPage" parameterType="java.util.Map" resultMap="orderMap">
+        select
+           t.id oid,
+           t.date odate,
+           t.state ostate,
+        case t.state
+        when 0 then '等待商家确认'
+        when 1 then '制作中'
+        when 2 then '派送中'
+        when 3 then '已完成'
+        end as ostatestr,
+           tu.id tid,
+           tu.username tusername,
+           tu.nickname tnickname,
+           tu.gender tgender,
+           tu.telephone ttelephone,
+           tu.registerdate tregisterdate,
+           tu.address taddress,
+           tm.id mid,
+           tm.name mname,
+           tm.price mprice,
+           tm.flavor mflavor,
+           tt.id yid,
+           tt.name yname,
+           ta.id aid,
+           ta.username ausername
+        from t_order t
+        left join t_user tu on t.uid = tu.id
+        left join t_menu tm on t.mid = tm.id
+        left join t_type tt on tm.tid = tt.id
+        left join t_admin ta on t.aid = ta.id
+        <where>
+            <if test="name!=null and name!=''">
+                name like '%'#{name}'%'
+            </if>
+            <if test="uid!=null and uid!=''">
+            and t.uid = #{uid}
+        </if>
+            <if test="state==1">
+                and state = 0
+            </if>
+            <if test="state==2">
+                and state = 1
+            </if>
+        </where>
+        limit #{startpage},#{datasize}
+    </select>
+    <select id="selectByCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(1) from t_order
+        <where>
+            <if test="name!=null and name!=''">
+                name like '%'#{name}'%'
+            </if>
+            <if test="state==1">
+                and state = 0
+            </if>
+            <if test="state==2">
+                and state = 1
+            </if>
+            <if test="uid!=null and uid!=''">
+                and uid = #{uid}
+            </if>
+        </where>
+    </select>
+    <delete id="deleteOrder" parameterType="java.lang.Integer">
+        delete from t_order where id = #{id}
+    </delete>
+    <update id="receiveOrder" parameterType="java.lang.Integer">
+        update t_order set state = 1 where id =#{id}
+    </update>
+    <update id="sendOrder" parameterType="java.lang.Integer">
+        update t_order set state = 2 where id= #{id}
+    </update>
+    <update id="receiveOrderObj" parameterType="java.lang.Integer">
+        update t_order set state = 3 where id = #{id}
+    </update>
+</mapper>

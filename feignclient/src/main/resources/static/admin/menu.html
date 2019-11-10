@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript" src="../js/vue.min.js"></script>
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<body>
+<div id="userMain" style="padding-top: 10px;padding-left: 10px;">
+    <el-form :inline="true">
+        <el-form-item>
+            <el-input v-model="name" placeholder="请输入菜名" clearable></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="loaddata">查询</el-button>
+            <el-button type="primary" @click="btnadd">添加</el-button>
+        </el-form-item>
+    </el-form>
+    <el-table
+            :data="datalist.userlist"
+            border
+            style="width: 100%"
+            height="450px">
+        <el-table-column
+                fixed
+                prop="id"
+                label="id">
+        </el-table-column>
+        <el-table-column
+                prop="name"
+                label="菜名">
+        </el-table-column>
+        <el-table-column
+                prop="price"
+                label="价格">
+        </el-table-column>
+        <el-table-column
+                prop="flavor"
+                label="口味">
+        </el-table-column>
+        <el-table-column
+                prop="type.name"
+                label="类型">
+        </el-table-column>
+        <el-table-column
+                fixed="right"
+                label="操作">
+            <template slot-scope="scope">
+                <el-button @click="btnupdate(scope.row)" type="text" size="small">修改</el-button>
+                <el-button type="text" size="small" @click="btndelete(scope.row)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <div class="block">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="datalist.currentpage"
+                :page-sizes="[10, 30, 50, 100]"
+                :page-size="datalist.pagesize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="datalist.total">
+        </el-pagination>
+
+        <el-dialog
+            title="菜单信息维护"
+            :visible.sync="dialogVisible"
+            width="70%">
+            <el-form :model="dataForm" :rules="dataRule" ref="dataForm" label-width="100px">
+                <el-form-item prop="name" label="菜名">
+                    <el-input v-model="dataForm.name" placeholder="请输入菜名"></el-input>
+                </el-form-item>
+                <el-form-item prop="price" label="价格">
+                    <el-input-number v-model="dataForm.price" :precision="2" :step="0.1" placeholder="请输入价格"></el-input-number>
+                </el-form-item>
+                <el-form-item prop="flavor" label="口味">
+                    <el-input v-model="dataForm.flavor" placeholder="请输入口味"></el-input>
+                </el-form-item>
+                <el-form-item prop="tid" label="菜品类型">
+                    <el-select v-model="dataForm.tid" placeholder="请输入菜品类型">
+                        <el-option
+                                v-for="item in typeList"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+                <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="btnsaveOrUpdate">确 定</el-button>
+              </span>
+        </el-dialog>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+    let vuemain = new Vue({
+        el: "#userMain",
+        data(){
+            const valdateName = (rule, value, callback) =>{
+                if(value == ""){
+                    callback(new Error("请输入菜名"))
+                    return
+                }
+                $.ajaxSettings.async = false;//同步
+                $.post("/menu/judgeUsername",{name:this.dataForm.name},function (result) {
+                    if(result.code !== 20000 && vuemain.dataForm.id == ""){
+                        callback(new Error("菜名重复"));
+                    } else {
+                        callback();
+                    }
+                })
+            }
+            return{
+                name:"",
+                typeList:[],
+                datalist: {
+                    userlist: [],
+                    total: 0,
+                    currentpage: 1,
+                    pagesize: 10
+                },
+                dataForm:{
+                    id:"",
+                    name:"",
+                    price:"",
+                    flavor:"",
+                    tid:"",
+                },
+                dialogVisible: false,
+                dataRule: {
+                    name: [
+                        {validator: valdateName, trigger: 'blur'}
+                    ],
+                    price:[
+                        { required: true, message: '请输入价格', trigger: 'blur' },
+                    ],
+                    flavor:[
+                        { required: true, message: '请输入口味', trigger: 'blur' },
+                    ],
+                    tid:[
+                        { required: true, message: '请输入菜品类型', trigger: 'blur' },
+                    ]
+                }
+            }
+        },
+        created(){
+            this.loaddata();
+        },
+        methods:{
+            loaddata(){
+                $.post(`/menu/selectByPage/${this.datalist.currentpage}/${this.datalist.pagesize}`,{name:this.name},function (result) {
+                    vuemain.datalist.userlist = result.data;
+                    vuemain.datalist.total = result.total;
+                })
+            },
+            // 页面长度改变时候触发事件
+            handleSizeChange(pagesize){
+               vuemain.datalist.pagesize = pagesize;
+               this.loaddata();
+            },
+            // 当前页改变时候触发事件
+            handleCurrentChange(currentpage){
+                vuemain.datalist.currentpage = currentpage;
+                this.loaddata();
+            },
+            // 点击添加方法
+            btnadd(){
+                // this.$refs["dataForm"].resetFields();
+                this.dialogVisible = true
+                this.resetForm();
+            },
+        //    保存或者更新
+            btnsaveOrUpdate(){
+                this.$refs["dataForm"].validate((valid) => {
+                    let url=this.dataForm.id == ""?"/menu/save":"/menu/update"
+                    if(valid){
+                        $.ajax({
+                            url: url,
+                            type: "post",
+                            data: JSON.stringify(this.dataForm),
+                            contentType: "application/json;charset=utf-8",
+                            dataType:"json",
+                            success:function (data) {
+                                if(data.code === 20000){
+                                    alert("保存成功");
+                                    vuemain.dialogVisible = false;
+                                    vuemain.loaddata();
+                                    vuemain.resetForm();//重置单元格
+                                }
+                            }
+                        })
+                    }
+                })
+            },
+            resetForm(){
+                this.dataForm.name=""
+                this.dataForm.id = "";
+
+                $.post("/type/selectAllList",function (result) {
+                    vuemain.typeList = result;
+                })
+            },
+        //    点击修改按钮
+            btnupdate(data){
+                this.resetForm();
+               $.get(`/menu/findById/${data.id}`,function (result) {
+                   vuemain.dataForm = result;
+                   vuemain.dialogVisible = true
+               })
+            },
+        //    点击删除操作
+            btndelete(data){
+                $.post(`/menu/deleteById/${data.id}`,function (result) {
+                    if(result.code === 20000){
+                        alert("删除成功");
+                        vuemain.dialogVisible = false;
+                        vuemain.loaddata();
+                        vuemain.resetForm();//重置单元格
+                    }
+                })
+            }
+        }
+    })
+</script>
+</html>

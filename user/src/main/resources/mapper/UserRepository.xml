@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.baidu.repository.UserRepository">
+    <select id="selectByPage" parameterType="java.util.Map" resultType="com.baidu.entity.User">
+        select date_format(registerdate,'%Y-%m-%d') registerdatestr,t.* from t_user t
+         <where>
+             <if test="username!=null and username!=''">
+                 username like "%"#{username}"%"
+             </if>
+         </where>
+         limit #{startcount},#{datasize}
+    </select>
+    <select id="selectByCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(1) from t_user
+        <where>
+            <if test="username!=null and username!=''">
+                username like "%"#{username}"%"
+            </if>
+        </where>
+    </select>
+    <insert id="save" parameterType="com.baidu.entity.User">
+        insert into t_user(username,password,nickname,gender,telephone,registerdate,address)
+        values (#{username},#{password},#{nickname},#{gender},#{telephone},#{registerdate},#{address})
+    </insert>
+    <select id="judgeUsername" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(1) from t_user where username = #{username}
+    </select>
+    <select id="findById" parameterType="java.lang.Integer" resultType="com.baidu.entity.User">
+        select * from t_user t where t.id = #{id}
+    </select>
+    <update id="update" parameterType="com.baidu.entity.User">
+        update t_user
+        <set>
+            username = #{username},
+            password = #{password},
+            nickname = #{nickname},
+            gender = #{gender},
+            telephone = #{telephone},
+            address = #{address}
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        delete from t_user where id = #{id}
+    </delete>
+
+    <update id="resetPasword">
+        update t_user set password = #{password} where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,23 @@
+.clear:after{
+    clear: both;
+    overflow: hidden;
+}
+#adminmain .right{
+    float: right;
+}
+.title{
+    float: left;
+    margin-top: 10px;
+    margin-left: 10px;
+    line-height: 30px;
+    font-weight: bold;
+    font-size: 30px;
+    color: white;
+}
+iframe{
+    border: none;
+}
+body{
+    padding: 0;
+    margin: 0;
+}

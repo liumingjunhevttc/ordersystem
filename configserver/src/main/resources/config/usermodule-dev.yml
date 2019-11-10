@@ -1,0 +1,22 @@
+
+spring:
+  application:
+    name: usermodule
+  datasource:
+    name: ordersystem
+    url: jdbc:mysql://localhost:3306/orderdemo
+    username: root
+    password: root
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8010/eureka/
+  instance:
+    prefer-ip-address: true
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.baidu.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+server:
+  port: 8013
